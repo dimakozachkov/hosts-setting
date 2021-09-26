@@ -8,12 +8,12 @@ pub fn get_ips_from_file(path: &str) -> Vec<String> {
 
     let re = get_re();
 
-    for line in reader.lines() {
+    reader.lines().for_each(|line| {
         let line = line.unwrap();
         if let Some(_) = re.captures(&line) {
             ips.push(line.into());
         }
-    }
+    });
 
     ips
 }

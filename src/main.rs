@@ -1,15 +1,18 @@
-use std::fs;
+use std::{fs, sync::RwLockWriteGuard};
+use std::env;
 
 use crossterm::style::Color;
-use ips::{get_disabled_ips, get_enabled_ips};
-use terminal_menu::{button, label, list, menu, mut_menu, run, TerminalMenuItem};
+use ips::{get_disabled_ips, get_enabled_ips, get_ips_from_file};
+use terminal_menu::{TerminalMenuItem, TerminalMenuStruct, button, label, list, menu, mut_menu, run};
 
 mod ips;
 
-const PATH_TO_FILE: &str = "/etc/hosts";
+const UNIX_PATH_TO_FILE: &str = "/etc/hosts";
+const WINDOWS_PATH_TO_FILE: &str = "C:\\Windows\\System32\\drivers\\etc\\hosts";
 
 fn main() {
-    let ips = ips::get_ips_from_file(PATH_TO_FILE);
+    let path = get_path_to_hosts_file();
+    let ips = get_ips_from_file(&path);
     let (enabled_ips, disabled_ips) = (get_enabled_ips(&ips), get_disabled_ips(&ips));
 
     let mut menu_items: Vec<TerminalMenuItem> = Vec::new();
@@ -23,14 +26,21 @@ fn main() {
         menu_items.push(list(ip, vec!["Off", "On"]).colorize(Color::Red));
     }
 
-    menu_items.push(button("exit").colorize(Color::White));
+    menu_items.push(button("SAVE").colorize(Color::White));
 
     let menu = menu(menu_items);
 
     run(&menu);
     let mm = mut_menu(&menu);
 
+    let result = generate_hosts_file_content(&ips, mm);
+
+    save_hosts_file(&path, result);
+}
+
+fn generate_hosts_file_content(ips: &Vec<String>, mm: RwLockWriteGuard<TerminalMenuStruct>) -> String {
     let mut result = "".to_owned();
+    
     for ip in ips.iter() {
         let ip = ip.replace("#", "");
 
@@ -42,5 +52,17 @@ fn main() {
         }
     }
 
-    fs::write(PATH_TO_FILE, result).expect("Unable to write file");
+    result
+}
+
+fn save_hosts_file(path: &str, content: String) {
+    fs::write(path, content).expect("Unable to write file");
+}
+
+fn get_path_to_hosts_file() -> String {
+    if env::consts::OS == "windows" {
+        return WINDOWS_PATH_TO_FILE.to_owned();
+    }
+    
+    UNIX_PATH_TO_FILE.to_owned()
 }

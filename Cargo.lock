@@ -49,7 +49,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hosts-setting"
+name = "hfs"
 version = "0.1.0"
 dependencies = [
  "crossterm",
