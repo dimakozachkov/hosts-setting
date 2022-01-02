@@ -1,6 +1,4 @@
-use std::env;
 use std::{fs, sync::RwLockWriteGuard};
-
 use crossterm::style::Color;
 use host::Host;
 use host_service::{get_disabled_hosts, get_enabled_hosts, get_hosts_from_file};
@@ -11,12 +9,13 @@ use terminal_menu::{
 mod host;
 mod host_service;
 
-const UNIX_PATH_TO_FILE: &str = "/etc/hosts";
-const WINDOWS_PATH_TO_FILE: &str = "C:\\Windows\\System32\\drivers\\etc\\hosts";
+#[cfg(target_family = "unix")]
+const PATH_TO_HOSTS_FILE: &str = "/etc/hosts";
+#[cfg(target_family = "windows")]
+const PATH_TO_HOSTS_FILE: &str = "C:\\Windows\\System32\\drivers\\etc\\hosts";
 
 fn main() {
-    let path = get_path_to_hosts_file();
-    let hosts = get_hosts_from_file(&path);
+    let hosts = get_hosts_from_file(&PATH_TO_HOSTS_FILE);
     let (enabled_hosts, disabled_hosts) = (get_enabled_hosts(&hosts), get_disabled_hosts(&hosts));
 
     let mut menu_items: Vec<TerminalMenuItem> = Vec::new();
@@ -40,7 +39,7 @@ fn main() {
 
     let result = generate_hosts_file_content(&hosts, mm);
 
-    save_hosts_file(&path, result);
+    save_hosts_file(&PATH_TO_HOSTS_FILE, result);
 }
 
 fn generate_hosts_file_content(
@@ -65,12 +64,4 @@ fn generate_hosts_file_content(
 
 fn save_hosts_file(path: &str, content: String) {
     fs::write(path, content).expect("Unable to write file");
-}
-
-fn get_path_to_hosts_file() -> String {
-    if env::consts::OS == "windows" {
-        return WINDOWS_PATH_TO_FILE.to_owned();
-    }
-
-    UNIX_PATH_TO_FILE.to_owned()
 }
