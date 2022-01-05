@@ -37,16 +37,9 @@ fn get_re() -> Regex {
     Regex::new(r#"^(#?)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s+([\w\.\-_]+)"#).unwrap()
 }
 
-pub fn get_enabled_hosts(hosts: &Vec<Host>) -> Vec<&Host> {
+pub fn get_hosts_by_status(hosts: &Vec<Host>, status: HostStatus) -> Vec<&Host> {
     hosts
         .iter()
-        .filter(|host| host.is_on == HostStatus::On)
-        .collect()
-}
-
-pub fn get_disabled_hosts(hosts: &Vec<Host>) -> Vec<&Host> {
-    hosts
-        .iter()
-        .filter(|host| host.is_on == HostStatus::Off)
+        .filter(|host| host.is_on == status)
         .collect()
 }
