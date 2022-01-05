@@ -1,10 +1,11 @@
-use std::{fs, sync::RwLockWriteGuard, net::Ipv4Addr};
+use std::{fs, sync::RwLockWriteGuard, net::Ipv4Addr, process};
 use crossterm::style::Color;
 use host::{Host, HostStatus};
 use host_service::{get_hosts_by_status, get_hosts_from_file};
 use terminal_menu::{
     button, label, list, menu, mut_menu, run, TerminalMenuItem, TerminalMenuStruct,
 };
+use is_root::is_root;
 
 mod host;
 mod host_service;
@@ -18,6 +19,11 @@ const MENU_ITEM_POINT_ON: &str = "On";
 const MENU_ITEM_POINT_OFF: &str = "Off";
 
 fn main() {
+    if !is_root() {
+        println!("To use the program you must run the program with root/administrator privileges!");
+        process::exit(0);
+    }
+
     let hosts = get_hosts_from_file(&PATH_TO_HOSTS_FILE);
     let enabled_hosts = get_hosts_by_status(&hosts, HostStatus::On);
     let disabled_hosts = get_hosts_by_status(&hosts, HostStatus::Off);
